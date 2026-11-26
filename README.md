@@ -87,7 +87,7 @@ sudo journalctl -u steam-guard-bot -n 20 --no-pager
 ```
 
 `enable` включает автозапуск после перезагрузки VM. Сервис изолирован: свой venv,
-свой токен, свои данные, `Restart=always`, `MemoryMax=150M`. Другие боты
+свой токен, свои данные, `Restart=always`, `MemoryMax=200M`. Другие боты
 (FunPay и т.д.) не затрагиваются.
 
 Обновление:

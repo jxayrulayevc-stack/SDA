@@ -13,7 +13,7 @@ Environment=DATA_DIR=/home/ubuntu/steam-guard-bot-data
 ExecStart=/home/ubuntu/steam-guard-bot/.venv/bin/python -m bot.main
 Restart=always
 RestartSec=5
-MemoryMax=150M
+MemoryMax=200M
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
