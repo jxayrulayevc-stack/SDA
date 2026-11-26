@@ -21,4 +21,5 @@ class AdminOnlyMiddleware:
         if user_id not in self._admin_ids:
             logger.warning("Access denied: update from non-admin ignored")
             return None
+        logger.info("Admin update accepted: %s", type(event).__name__)
         return await handler(event, data)
