@@ -17,7 +17,7 @@ router = Router()
 HELP_TEXT = (
     "Steam Guard бот.\n\n"
     "/accounts — список аккаунтов (нажмите на логин, чтобы получить код)\n"
-    "/code <логин> — код нужного аккаунта\n"
+    "/code &lt;логин&gt; — код нужного аккаунта\n"
     "/delete — удалить аккаунт\n"
     "/help — эта справка\n\n"
     "Чтобы добавить аккаунт, отправьте файл .maFile или .json "
@@ -52,7 +52,7 @@ async def code_command(
 ) -> None:
     login = (command.args or "").strip()
     if not login:
-        await message.answer("Использование: /code <логин>. Список: /accounts")
+        await message.answer("Использование: /code &lt;логин&gt;. Список: /accounts")
         return
     await send_code_message(bot, message.chat.id, login, accounts, janitor)
 

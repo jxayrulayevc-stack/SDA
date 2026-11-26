@@ -9,7 +9,9 @@ from aiogram.types import ErrorEvent
 logger = logging.getLogger(__name__)
 
 
-async def on_error(event: ErrorEvent, exception: Exception) -> None:
+async def on_error(event: ErrorEvent) -> None:
+    """Aiogram passes ErrorEvent as the event; the exception lives on it."""
+    exception = event.exception
     logger.exception("Unhandled error while processing update", exc_info=exception)
     update = event.update
     chat = getattr(update, "effective_chat", None)
