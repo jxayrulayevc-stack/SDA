@@ -37,9 +37,9 @@ def format_code(result: CodeResult) -> str:
 
 async def safe_edit_text(
     bot: Bot,
+    text: str,
     chat_id: int,
     message_id: int,
-    text: str,
     reply_markup: InlineKeyboardMarkup | None = None,
 ) -> None:
     """Edit a message, ignoring Telegram's 'message is not modified' error."""
@@ -133,16 +133,16 @@ async def edit_code_message(
     except UnknownAccount:
         await safe_edit_text(
             bot,
-            message.chat.id,
-            message.message_id,
             f"Аккаунт {html.escape(login)} не найден",
+            chat_id=message.chat.id,
+            message_id=message.message_id,
         )
         return
     await safe_edit_text(
         bot,
-        message.chat.id,
-        message.message_id,
         format_code(result),
+        chat_id=message.chat.id,
+        message_id=message.message_id,
         reply_markup=code_keyboard(login),
     )
     janitor.schedule(message.chat.id, message.message_id)

@@ -67,6 +67,7 @@ async def handle_callback(
         await callback.answer()
         if callback.message is not None:
             await safe_edit_text(
+                bot,
                 f"Удалить аккаунт <code>{html.escape(login)}</code>?",
                 chat_id=callback.message.chat.id,
                 message_id=callback.message.message_id,
@@ -89,7 +90,12 @@ async def handle_callback(
                 if removed
                 else f"Аккаунт {html.escape(target)} уже удалён"
             )
-            await safe_edit_text(text, chat_id=callback.message.chat.id, message_id=callback.message.message_id)
+            await safe_edit_text(
+                bot,
+                text,
+                chat_id=callback.message.chat.id,
+                message_id=callback.message.message_id,
+            )
         logger.info("Account deleted: %s", target)
         return
 
@@ -111,6 +117,7 @@ async def handle_callback(
         await callback.answer()
         if callback.message is not None:
             await safe_edit_text(
+                bot,
                 f"Аккаунт {html.escape(result.login)} заменён",
                 chat_id=callback.message.chat.id,
                 message_id=callback.message.message_id,
@@ -122,6 +129,7 @@ async def handle_callback(
         await callback.answer()
         if callback.message is not None:
             await safe_edit_text(
+                bot,
                 "Отправьте файл .maFile или .json documents-сообщением. "
                 "Бот проверит его, зашифрует и удалит сообщение с файлом.",
                 chat_id=callback.message.chat.id,
@@ -133,6 +141,7 @@ async def handle_callback(
         await callback.answer()
         if callback.message is not None:
             await safe_edit_text(
+                bot,
                 accounts_list_text(logins),
                 chat_id=callback.message.chat.id,
                 message_id=callback.message.message_id,
@@ -151,6 +160,7 @@ async def handle_callback(
         await callback.answer()
         if callback.message is not None:
             await safe_edit_text(
+                bot,
                 "Отменено",
                 chat_id=callback.message.chat.id,
                 message_id=callback.message.message_id,
