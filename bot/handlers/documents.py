@@ -10,7 +10,7 @@ from aiogram import Bot, F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from bot.keyboards import replace_keyboard
+from bot.keyboards import main_keyboard, replace_keyboard
 from bot.states import AddStates
 from bot.utils import safe_delete
 from services.accounts import AccountService, DuplicateAccount
@@ -79,5 +79,8 @@ async def upload_mafile(
 
     # Saved successfully: only now delete the message containing the file.
     await drop_file_message()
-    await message.answer(f"Аккаунт {result.login} добавлен")
+    await message.answer(
+        f"Аккаунт {result.login} добавлен",
+        reply_markup=main_keyboard(),
+    )
     logger.info("Account added: %s", result.login)

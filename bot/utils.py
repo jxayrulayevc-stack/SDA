@@ -8,13 +8,22 @@ import logging
 from typing import Any
 
 from aiogram import Bot
-from aiogram.exceptions import TelegramAPIError
-from aiogram.types import Message
+from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
+from aiogram.types import InlineKeyboardMarkup, Message
 
 from bot.keyboards import code_keyboard
 from services.accounts import AccountService, CodeResult, UnknownAccount
 
 logger = logging.getLogger(__name__)
+
+
+def accounts_list_text(logins: list[str]) -> str:
+    if not logins:
+        return (
+            "Аккаунтов пока нет. Нажмите «➕ Добавить» или просто отправьте "
+            "файл .maFile / .json documents-сообщением."
+        )
+    return f"Аккаунтов: {len(logins)}. Выберите логин:"
 
 
 def format_code(result: CodeResult) -> str:
@@ -24,6 +33,26 @@ def format_code(result: CodeResult) -> str:
         f"<code>{result.code}</code>\n"
         f"Действует ещё {result.valid_for} сек."
     )
+
+
+async def safe_edit_text(
+    bot: Bot,
+    chat_id: int,
+    message_id: int,
+    text: str,
+    reply_markup: InlineKeyboardMarkup | None = None,
+) -> None:
+    """Edit a message, ignoring Telegram's 'message is not modified' error."""
+    try:
+        await bot.edit_message_text(
+            text,
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=reply_markup,
+        )
+    except TelegramBadRequest as exc:
+        if "not modified" not in str(exc).lower():
+            raise
 
 
 async def safe_delete(bot: Bot, chat_id: int, message_id: int) -> None:
@@ -102,16 +131,18 @@ async def edit_code_message(
     try:
         result = await accounts.get_code(login)
     except UnknownAccount:
-        await bot.edit_message_text(
+        await safe_edit_text(
+            bot,
+            message.chat.id,
+            message.message_id,
             f"Аккаунт {html.escape(login)} не найден",
-            chat_id=message.chat.id,
-            message_id=message.message_id,
         )
         return
-    await bot.edit_message_text(
+    await safe_edit_text(
+        bot,
+        message.chat.id,
+        message.message_id,
         format_code(result),
-        chat_id=message.chat.id,
-        message_id=message.message_id,
         reply_markup=code_keyboard(login),
     )
     janitor.schedule(message.chat.id, message.message_id)

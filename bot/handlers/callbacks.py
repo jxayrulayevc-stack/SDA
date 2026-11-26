@@ -12,11 +12,19 @@ from aiogram.types import CallbackQuery
 
 from bot.keyboards import (
     AccountCallback,
+    accounts_keyboard,
     delete_confirm_keyboard,
     login_by_key,
 )
 from bot.states import DeleteStates
-from bot.utils import MessageJanitor, edit_code_message, safe_delete, send_code_message
+from bot.utils import (
+    MessageJanitor,
+    accounts_list_text,
+    edit_code_message,
+    safe_delete,
+    safe_edit_text,
+    send_code_message,
+)
 from services.accounts import AccountService
 
 logger = logging.getLogger(__name__)
@@ -58,7 +66,7 @@ async def handle_callback(
         await state.update_data(pending_login=login)
         await callback.answer()
         if callback.message is not None:
-            await bot.edit_message_text(
+            await safe_edit_text(
                 f"Удалить аккаунт <code>{html.escape(login)}</code>?",
                 chat_id=callback.message.chat.id,
                 message_id=callback.message.message_id,
@@ -81,7 +89,7 @@ async def handle_callback(
                 if removed
                 else f"Аккаунт {html.escape(target)} уже удалён"
             )
-            await bot.edit_message_text(text, chat_id=callback.message.chat.id, message_id=callback.message.message_id)
+            await safe_edit_text(text, chat_id=callback.message.chat.id, message_id=callback.message.message_id)
         logger.info("Account deleted: %s", target)
         return
 
@@ -102,7 +110,7 @@ async def handle_callback(
             return
         await callback.answer()
         if callback.message is not None:
-            await bot.edit_message_text(
+            await safe_edit_text(
                 f"Аккаунт {html.escape(result.login)} заменён",
                 chat_id=callback.message.chat.id,
                 message_id=callback.message.message_id,
@@ -110,11 +118,39 @@ async def handle_callback(
         logger.info("Account replaced: %s", result.login)
         return
 
+    if action == "add_help":
+        await callback.answer()
+        if callback.message is not None:
+            await safe_edit_text(
+                "Отправьте файл .maFile или .json documents-сообщением. "
+                "Бот проверит его, зашифрует и удалит сообщение с файлом.",
+                chat_id=callback.message.chat.id,
+                message_id=callback.message.message_id,
+            )
+        return
+
+    if action in {"refresh_list", "back_to_list"}:
+        await callback.answer()
+        if callback.message is not None:
+            await safe_edit_text(
+                accounts_list_text(logins),
+                chat_id=callback.message.chat.id,
+                message_id=callback.message.message_id,
+                reply_markup=accounts_keyboard(logins),
+            )
+        return
+
+    if action == "close":
+        await callback.answer()
+        if callback.message is not None:
+            await safe_delete(bot, callback.message.chat.id, callback.message.message_id)
+        return
+
     if action == "cancel":
         await state.clear()
         await callback.answer()
         if callback.message is not None:
-            await bot.edit_message_text(
+            await safe_edit_text(
                 "Отменено",
                 chat_id=callback.message.chat.id,
                 message_id=callback.message.message_id,

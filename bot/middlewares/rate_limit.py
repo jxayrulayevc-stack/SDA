@@ -8,8 +8,6 @@ from collections import defaultdict, deque
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from aiogram.types import CallbackQuery, Message
-
 logger = logging.getLogger(__name__)
 
 Handler = Callable[[Any, dict[str, Any]], Awaitable[Any]]
@@ -23,10 +21,16 @@ class CodeRateLimitMiddleware:
         self._calls: dict[int, deque[float]] = defaultdict(deque)
 
     def _is_code_request(self, event: Any) -> bool:
-        if isinstance(event, Message):
-            return (event.text or "").split(maxsplit=1)[0].split("@")[0] == "/code"
-        if isinstance(event, CallbackQuery):
-            return (event.data or "").startswith(CODE_CALLBACK_PREFIX)
+        # Duck typing keeps this testable without constructing aiogram objects.
+        text = getattr(event, "text", None)
+        if isinstance(text, str):
+            text = text.strip()
+            if not text:  # documents and media have no text
+                return False
+            return text.split(maxsplit=1)[0].split("@")[0] == "/code"
+        data = getattr(event, "data", None)
+        if isinstance(data, str):
+            return data.startswith(CODE_CALLBACK_PREFIX)
         return False
 
     async def __call__(self, handler: Handler, event: Any, data: dict[str, Any]) -> Any:

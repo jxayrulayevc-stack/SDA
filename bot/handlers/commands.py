@@ -2,42 +2,47 @@
 
 from __future__ import annotations
 
-from aiogram import Bot, Router
+from aiogram import Bot, F, Router
 from aiogram.filters import Command, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from bot.keyboards import accounts_keyboard
+from bot.keyboards import accounts_keyboard, main_keyboard
 from bot.states import DeleteStates
-from bot.utils import MessageJanitor, send_code_message
+from bot.utils import MessageJanitor, accounts_list_text, send_code_message
 from services.accounts import AccountService
 
 router = Router()
 
 HELP_TEXT = (
     "Steam Guard бот.\n\n"
+    "Кнопки снизу: 📋 Аккаунты, 🗑 Удалить, ℹ️ Помощь.\n\n"
     "/accounts — список аккаунтов (нажмите на логин, чтобы получить код)\n"
     "/code &lt;логин&gt; — код нужного аккаунта\n"
     "/delete — удалить аккаунт\n"
     "/help — эта справка\n\n"
-    "Чтобы добавить аккаунт, отправьте файл .maFile или .json "
-    "(файл будет удалён из чата)."
+    "Чтобы добавить аккаунт, нажмите «➕ Добавить» в списке или просто "
+    "отправьте файл .maFile / .json documents-сообщением. "
+    "Файл удаляется из чата после сохранения."
 )
 
 
 @router.message(Command("start", "help"))
 async def help_command(message: Message) -> None:
-    await message.answer(HELP_TEXT)
+    await message.answer(HELP_TEXT, reply_markup=main_keyboard())
+
+
+@router.message(F.text == "ℹ️ Помощь")
+async def help_button(message: Message) -> None:
+    await help_command(message)
 
 
 @router.message(Command("accounts"))
+@router.message(F.text == "📋 Аккаунты")
 async def accounts_command(message: Message, accounts: AccountService) -> None:
     logins = await accounts.list_accounts()
-    if not logins:
-        await message.answer("Аккаунтов пока нет. Отправьте файл .maFile или .json.")
-        return
     await message.answer(
-        f"Аккаунтов: {len(logins)}. Выберите логин:",
+        accounts_list_text(logins),
         reply_markup=accounts_keyboard(logins),
     )
 
@@ -58,6 +63,7 @@ async def code_command(
 
 
 @router.message(Command("delete"))
+@router.message(F.text == "🗑 Удалить")
 async def delete_command(
     message: Message,
     accounts: AccountService,
