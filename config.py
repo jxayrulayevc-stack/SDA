@@ -23,7 +23,10 @@ class Settings(BaseSettings):
     code_ttl_seconds: int = Field(default=60, alias="CODE_TTL_SECONDS")
     data_dir: Path = Field(default=Path("data"), alias="DATA_DIR")
     env_file_path: Path = Field(default=Path(".env"), alias="ENV_FILE")
-    steam_time_url: str = Field(alias="STEAM_TIME_URL", default="https://api.steampowered.com/ITwoFactorService/QueryTime/v1/")
+    steam_time_url: str = Field(
+        alias="STEAM_TIME_URL",
+        default="https://api.steampowered.com/ITwoFactorService/QueryTime/v1/",
+    )
     steam_time_sync_interval: int = Field(default=3600, alias="STEAM_TIME_SYNC_INTERVAL")
     code_rate_limit: int = Field(default=10, alias="CODE_RATE_LIMIT")
     rate_limit_window: int = Field(default=60, alias="RATE_LIMIT_WINDOW")
