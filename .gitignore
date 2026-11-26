@@ -1,0 +1,14 @@
+.env
+*.env
+data/
+*.db
+*.sqlite*
+*.maFile
+*.mafile
+maFiles/
+*.key
+*.pem
+logs/
+__pycache__/
+.venv/
+.pytest_cache/
