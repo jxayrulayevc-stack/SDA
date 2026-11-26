@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import logging
+from io import BytesIO
 
 from aiogram import Bot, F, Router
 from aiogram.fsm.context import FSMContext
@@ -36,23 +37,26 @@ async def upload_mafile(
         await message.answer("Нужен файл .maFile или .json размером до 100 КБ.")
         return
 
-    from io import BytesIO
-
     buffer = BytesIO()
     await bot.download(document, destination=buffer)
     raw = buffer.getvalue()
 
-    # The file message is removed as soon as its bytes are in memory.
-    # No secret is ever written to disk or to logs.
-    await safe_delete(bot, message.chat.id, message.message_id)
+    chat_id = message.chat.id
+    message_id = message.message_id
+
+    async def drop_file_message() -> None:
+        # Never leave a maFile in the chat, even when validation fails.
+        await safe_delete(bot, chat_id, message_id)
 
     if len(raw) > max_upload_bytes:
+        await drop_file_message()
         await message.answer("Файл слишком большой (максимум 100 КБ).")
         return
 
     try:
         result = await accounts.add_account(raw, filename)
     except DuplicateAccount as exc:
+        await drop_file_message()
         await state.set_state(AddStates.confirm_replace)
         await state.update_data(
             pending_mafile=base64.b64encode(raw).decode("ascii"),
@@ -64,12 +68,16 @@ async def upload_mafile(
         )
         return
     except MaFileValidationError as exc:
+        await drop_file_message()
         await message.answer(f"Не удалось добавить аккаунт: {exc}")
         return
     except Exception as exc:  # noqa: BLE001 - never expose exception internals
+        await drop_file_message()
         logger.error("Account import failed (%s)", type(exc).__name__)
         await message.answer("Не удалось добавить аккаунт. Проверьте файл и журнал сервиса.")
         return
 
+    # Saved successfully: only now delete the message containing the file.
+    await drop_file_message()
     await message.answer(f"Аккаунт {result.login} добавлен")
     logger.info("Account added: %s", result.login)

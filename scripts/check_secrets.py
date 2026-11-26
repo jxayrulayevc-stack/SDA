@@ -27,7 +27,9 @@ PATTERNS: dict[str, re.Pattern[str]] = {
     "env_secret_value": re.compile(
         r"(?i)\b(?:BOT_TOKEN|ENCRYPTION_KEY)\b\s*=\s*[\"']?[A-Za-z0-9_+/=.-]{20,}"
     ),
-    "fernet_key": re.compile(r"\b[A-Za-z0-9_-]{43}=\b"),
+    "fernet_key": re.compile(
+        r"(?<![A-Za-z0-9_-])[A-Za-z0-9_-]{43}=(?![A-Za-z0-9_-])"
+    ),
 }
 
 Finding = tuple[str, int | None, str]
