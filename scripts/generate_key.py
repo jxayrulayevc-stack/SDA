@@ -4,7 +4,12 @@ Usage: python scripts/generate_key.py
 Print the result only into your local, private shell; never commit it.
 """
 
-from storage.crypto import Encryptor
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from storage.crypto import Encryptor  # noqa: E402
 
 
 def main() -> None:
